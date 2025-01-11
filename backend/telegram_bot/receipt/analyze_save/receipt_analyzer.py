@@ -1,12 +1,10 @@
 import json
 import base64
 from openai import OpenAI
-from telegram_bot.models import Receipt
-from asgiref.sync import sync_to_async
 
 
 class ReceiptAnalyzer:
-    """Analyzing receipt with ai and save data in db """
+    """Analyzing receipt with ai and return json schema """
 
     def __init__(self, api_key, org_id=None):
         """
@@ -81,7 +79,7 @@ class ReceiptAnalyzer:
                 model="gpt-4o-mini",
                 messages=[
                     {
-                        "role": "system", 
+                        "role": "system",
                         "content": "You are a receipt analyzer."},
                     {
                         "role": "user",
@@ -118,35 +116,3 @@ class ReceiptAnalyzer:
         except Exception as e:
             raise Exception(f"Error encoding image: {str(e)}")
 
-
-class ReceiptSaver:
-    """Get json response and insert in Receipt table"""
-    def __init__(self, user_account):
-        self.user_account = user_account
-
-    async def save_receipt(self, json_text):
-        """
-        Save receipt data to the database.
-        Args:
-            json_text (str): Raw JSON text from AI response
-        Returns:
-            receipt object
-        """
-        try:
-            # Clean the JSON text (remove markdown code blocks if present)
-            if json_text.startswith('```'):
-                lines = json_text.strip().split('\n')[1:-1]  # Remove first and last lines
-                json_text = '\n'.join(lines)
-
-            # Parse JSON to validate it
-            data = json.loads(json_text)
-            receipt = await sync_to_async(Receipt.objects.create)(
-                user=self.user_account,
-                amount=data.get("amount"),
-                text=data.get("text"),
-                date_upload=data.get("date_upload"),
-                transaction_type=data.get("transaction_type")
-            )
-            return receipt
-        except Exception as e:
-            raise Exception(f"Error saving receipt: {str(e)}")

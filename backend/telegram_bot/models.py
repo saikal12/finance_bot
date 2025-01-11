@@ -15,3 +15,8 @@ class Receipt(models.Model):
     date_upload = models.DateTimeField()
     transaction_type =models.CharField(max_length=150, blank=True, null=True)
     image_b64 = models.TextField()
+
+
+class UserLanguage(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)  #relation for user account getting from  telegram chat id
+    language = models.CharField(max_length=30, default='en')
